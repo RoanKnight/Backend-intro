@@ -93,6 +93,7 @@ class ProductController extends BaseController
         $product->name = $input['name'];
         $product->description = $input['description'];
         $product->price = $input['price'];
+        $product->supplier_id = $input['supplier_id'];
         $product->save();
    
         return $this->sendResponse(new ProductResource($product), 'Product updated successfully.');

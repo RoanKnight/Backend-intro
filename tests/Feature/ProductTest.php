@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Exceptions;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 use Tests\TestCase;
+use Database\Seeders\SupplierSeeder;
 use Database\Seeders\ProductSeeder;
 
 use App\Models\Product;
@@ -24,6 +25,7 @@ class ProductTest extends TestCase
     {
         parent::setUp();
 
+        $this->seed(SupplierSeeder::class);
         $this->seed(ProductSeeder::class);
 
         $user = User::factory()->create();
@@ -53,11 +55,11 @@ class ProductTest extends TestCase
         ]);
         $success = $response->json('success');
         $message = $response->json('message');
-        $Products = $response->json('data');
+        $products = $response->json('data');
 
         $this->assertEquals($success, true);
         $this->assertEquals($message, 'Products retrieved successfully.');
-        $this->assertCount(100, $Products);
+        $this->assertCount(100, $products);
     }
 
     public function test_product_show(): void
@@ -128,9 +130,9 @@ class ProductTest extends TestCase
 
     public function test_product_store(): void
     {
-        $Product = Product::factory()->make();
+        $product = Product::factory()->make();
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
-            ->postJson(route('products.store'), $Product->toArray());
+            ->postJson(route('products.store'), $product->toArray());
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -156,13 +158,13 @@ class ProductTest extends TestCase
 
         $this->assertEquals($success, true);
         $this->assertEquals($message, 'Product created successfully.');
-        $this->assertEquals($name, $Product->name);
-        $this->assertEquals($description, $Product->description);
-        $this->assertEquals($price, $Product->price);
-        $this->assertEquals($supplier_id, $Product->supplier_id);
+        $this->assertEquals($name, $product->name);
+        $this->assertEquals($description, $product->description);
+        $this->assertEquals($price, $product->price);
+        $this->assertEquals($supplier_id, $product->supplier_id);
 
         $this->assertDatabaseHas('products', [
-            'name' => $Product->name
+            'name' => $product->name
         ]);
     }
 
@@ -196,7 +198,7 @@ class ProductTest extends TestCase
         $product = Product::factory()->create();
         $updatedProduct = Product::factory()->make();
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
-            ->putJson(route('products.update', $product->id), $updatedProduct->toArray());
+                         ->putJson(route('products.update', $product->id), $updatedProduct->toArray());
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -264,12 +266,12 @@ class ProductTest extends TestCase
     public function test_product_update_not_found_error(): void
     {
         $updatedProduct = Product::factory()->make();
-        $missing_Product_id = mt_rand();
-        while (Product::where('id', $missing_Product_id)->count() > 0) {
-            $missing_Product_id = mt_rand();
+        $missing_product_id = mt_rand();
+        while (Product::where('id', $missing_product_id)->count() > 0) {
+            $missing_product_id = mt_rand();
         }
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
-            ->putJson(route('products.update', $missing_Product_id), $updatedProduct->toArray());
+            ->putJson(route('products.update', $missing_product_id), $updatedProduct->toArray());
 
         $response->assertStatus(404);
         $response->assertJsonStructure([
@@ -284,15 +286,15 @@ class ProductTest extends TestCase
         $this->assertEquals($message, 'Product not found.');
 
         $this->assertDatabaseMissing('products', [
-            'id' => $missing_Product_id
+            'id' => $missing_product_id
         ]);
     }
 
     public function test_product_destroy(): void
     {
-        $Product = Product::factory()->create();
+        $product = Product::factory()->create();
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
-            ->deleteJson(route('products.destroy', $Product->id));
+            ->deleteJson(route('products.destroy', $product->id));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -310,18 +312,18 @@ class ProductTest extends TestCase
         $this->assertEmpty($data);
 
         $this->assertDatabaseMissing('products', [
-            'id' => $Product->id,
+            'id' => $product->id,
         ]);
     }
 
     public function test_product_destroy_not_found_error(): void
     {
-        $missing_Product_id = mt_rand();
-        while (Product::where('id', $missing_Product_id)->count() > 0) {
-            $missing_Product_id = mt_rand();
+        $missing_product_id = mt_rand();
+        while (Product::where('id', $missing_product_id)->count() > 0) {
+            $missing_product_id = mt_rand();
         }
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
-            ->deleteJson(route('products.destroy', $missing_Product_id));
+            ->deleteJson(route('products.destroy', $missing_product_id));
 
         $response->assertStatus(404);
         $response->assertJsonStructure([
@@ -336,7 +338,7 @@ class ProductTest extends TestCase
         $this->assertEquals($message, 'Product not found.');
 
         $this->assertDatabaseMissing('products', [
-            'id' => $missing_Product_id
+            'id' => $missing_product_id
         ]);
     }
 }
